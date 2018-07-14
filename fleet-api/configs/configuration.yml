@@ -1,0 +1,28 @@
+# Logging settings.
+logging:
+ # The default level of all loggers. Can be OFF, ERROR, WARN, INFO, DEBUG, TRACE, or ALL.
+  level: DEBUG
+  loggers:
+    "org.hibernate": DEBUG
+
+  appenders:
+  - type: file
+    threshold: info
+    logFormat: "%-5p [%d{ISO8601}] [%X{reqId} %X{txnId}] %replace(%c: %m){'\n', '\n '}%n%replace(%ex){'(?m)^(.)',' $1'}%nopex"
+    currentLogFilename: /opt/muks/caffeine/swing/logs/fleet-api.log
+    archivedLogFilenamePattern: /opt/muks/caffeine/swing/logs/fleet-api-%d.log.gz
+    archivedFileCount: 5
+    timeZone: IST
+
+#  - type: console
+#    logFormat: "%-5p [%d{ISO8601}] [%X{reqId} %X{txnId}] %replace(%c: %m){'\n', '\n '}%n%replace(%ex){'(?m)^(.)',' $1'}%nopex"
+#    # Do not display log statements belxow this threshold to stdout.
+#    threshold: INFO
+
+server:
+  applicationConnectors:
+  - type: http
+    port: 8082
+  adminConnectors:
+  - type: http
+    port: 8083

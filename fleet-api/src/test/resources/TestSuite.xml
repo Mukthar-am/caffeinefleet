@@ -1,0 +1,9 @@
+<!DOCTYPE suite SYSTEM "http://beust.com/testng/testng-1.0.dtd" >
+
+<suite name="Test-class Suite" parallel="tests" thread-count="2">
+    <test name="Parallel Test Mode" group-by-instances="true">
+        <classes>
+            <class name="com.caffeine.fleet.FleetAPITests"/>
+        </classes>
+    </test>
+</suite>
