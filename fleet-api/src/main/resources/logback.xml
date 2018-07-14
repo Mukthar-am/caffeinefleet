@@ -2,7 +2,7 @@
 
 
 <configuration>
-    <property name="DEV_HOME" value="/opt/muks/jcl-logging/app"/>
+    <property name="DEV_HOME" value="/opt/caffeine/swing/logs"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
@@ -14,7 +14,7 @@
 
 
     <appender name="FILE-AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${DEV_HOME}/app.log</file>
+        <file>${DEV_HOME}/fleet-app.log</file>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <Pattern>
                 %d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36}.%M\(%line\): %msg%n
@@ -24,7 +24,7 @@
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- rollover daily -->
-            <fileNamePattern>${DEV_HOME}/app.%d{yyyy-MM-dd}.%i.log
+            <fileNamePattern>${DEV_HOME}/fleet-app.%d{yyyy-MM-dd}.%i.log
             </fileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy
                     class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
@@ -35,7 +35,7 @@
     </appender>
 
 
-    <root level="debug">
+    <root level="info">
         <appender-ref ref="FILE-AUDIT"/>
         <appender-ref ref="STDOUT"/>
     </root>

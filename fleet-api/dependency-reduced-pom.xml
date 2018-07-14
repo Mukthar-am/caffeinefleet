@@ -93,13 +93,15 @@
     </dependency>
   </dependencies>
   <properties>
-    <dropwizard.version>1.2.2</dropwizard.version>
-    <logback.version>1.0.7</logback.version>
-    <testng.version>6.9.10</testng.version>
-    <slf4j.version>1.7.7</slf4j.version>
-    <jacoco.version>0.7.2.201409121644</jacoco.version>
-    <java.version>1.8</java.version>
     <surefire.version>2.17</surefire.version>
+    <slf4j.version>1.7.7</slf4j.version>
+    <java.version>1.8</java.version>
+    <dropwizard.version>1.2.2</dropwizard.version>
+    <jackson-databind.version>2.9.0.pr1</jackson-databind.version>
+    <logback.version>1.0.7</logback.version>
+    <jacoco.version>0.7.2.201409121644</jacoco.version>
+    <redission.version>3.7.3</redission.version>
+    <testng.version>6.9.10</testng.version>
   </properties>
 </project>
 
