@@ -2,6 +2,7 @@ package com.caffeine.fleet.web.controller;
 
 import com.caffeine.fleet.handlers.FeedRequestHandler;
 import com.caffeine.fleet.web.representations.FleetRequest;
+import com.caffeine.fleet.web.representations.OrderRequest;
 import com.caffeine.fleet.web.templates.HealthCheckTemplate;
 import io.dropwizard.Configuration;
 import lombok.extern.slf4j.Slf4j;
@@ -10,10 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URISyntaxException;
@@ -49,6 +47,18 @@ public class CaffeineFleetRestController {
     }
 
 
+    /**
+     * {
+     *     "de_id": 12,
+     *     "lat": -56.727263722686104,
+     *     "lon": 37.68402408344105,
+     *     "state": 75
+     * }
+     *
+     * @param fleetRequest
+     * @return
+     * @throws URISyntaxException
+     */
     @POST
     public Response requestPicker(FleetRequest fleetRequest) throws URISyntaxException {
         /** validation */
@@ -66,9 +76,59 @@ public class CaffeineFleetRestController {
 
             return Response
                     .ok(
-                            feedRequestHandler.handle(fleetRequest)
+                            feedRequestHandler.handleFleetRequest(fleetRequest)
                     ).build();
         }
     }
+
+
+    /**
+     * {
+     *     "de_id": 12,
+     *     "lat": -56.727263722686104,
+     *     "lon": 37.68402408344105,
+     *     "state": 75
+     * }
+     *
+     * @param orderRequest
+     * @return
+     * @throws URISyntaxException
+     */
+    @POST
+    @Path("/orders")
+    public Response incomingOrders(OrderRequest orderRequest) throws URISyntaxException {
+        /** validation */
+        Set<ConstraintViolation<OrderRequest>> violations = validator.validate(orderRequest);
+
+        if (violations.size() > 0) {
+            ArrayList<String> validationMessages = new ArrayList<>();
+            for (ConstraintViolation<OrderRequest> violation : violations) {
+                validationMessages.add(violation.getPropertyPath().toString() + ": " + violation.getMessage());
+            }
+
+            return Response.status(Response.Status.BAD_REQUEST).entity(validationMessages).build();
+        } else {
+            FeedRequestHandler feedRequestHandler = new FeedRequestHandler();
+            feedRequestHandler.handleIncomingOrders(orderRequest);
+
+            return Response
+                    .ok(Response.Status.OK).build();
+        }
+    }
+
+
+    /**
+     * GET() -> http://localhost:8082/fleet/query/orders
+     * @param type
+     * @return
+     */
+    @GET
+    @Path("/query/{table}")
+    public Response healthCheck(@PathParam("table") String type) {
+        LOG.info("Query - {}", type);
+        FeedRequestHandler.queryHandlers(type);
+        return Response.ok(Response.Status.OK).build();
+    }
+
 
 }

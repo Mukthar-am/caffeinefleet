@@ -14,6 +14,7 @@ public class Redis {
 
     private RMap<Integer, String> DELIVERY_EXEC_LIST;
     private RMap<Integer, String> PROCESS_Q;
+    private RMap<Long, String> ORDERS_Q;
 
     /**
      * ToDo: use setter and getters, later
@@ -37,13 +38,16 @@ public class Redis {
 
         instance.REDISSION_CLIENT = Redisson.create(instance.CONFIG);
 
-         instance.DELIVERY_EXEC_LIST = instance.REDISSION_CLIENT.getMap("DeliveryExec");
-         instance.PROCESS_Q = instance.REDISSION_CLIENT.getMap("ProcessQ");
+        instance.DELIVERY_EXEC_LIST = instance.REDISSION_CLIENT.getMap("DeliveryExec");
+        instance.PROCESS_Q = instance.REDISSION_CLIENT.getMap("ProcessQ");
+        instance.ORDERS_Q = instance.REDISSION_CLIENT.getMap("OrdersQ");
 
         return instance;
     }
 
-    public RedissonClient getRedissionClient() { return this.REDISSION_CLIENT; }
+    public RedissonClient getRedissionClient() {
+        return this.REDISSION_CLIENT;
+    }
 
     public RMap<Integer, String> getDeliveryExecs() {
         return this.DELIVERY_EXEC_LIST;
@@ -51,5 +55,9 @@ public class Redis {
 
     public RMap<Integer, String> getProcessQ() {
         return this.PROCESS_Q;
+    }
+
+    public RMap<Long, String> getOrderQ() {
+        return this.ORDERS_Q;
     }
 }

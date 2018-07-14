@@ -2,16 +2,75 @@ package com.caffeine.fleet.handlers;
 
 import com.caffeine.fleet.cache.Redis;
 import com.caffeine.fleet.web.representations.FleetRequest;
+import com.caffeine.fleet.web.representations.OrderRequest;
 import org.redisson.api.RMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Iterator;
+import java.util.Set;
+
 /**
  */
 public class FeedRequestHandler {
-    private final Logger LOG = LoggerFactory.getLogger(FeedRequestHandler.class);
+    private final static Logger LOG = LoggerFactory.getLogger(FeedRequestHandler.class);
 
-    public String handle(FleetRequest fleetRequest) {
+    /**
+     * method to handle incoming order requests
+     * {
+     *     "order_id": 1,
+     *     "restaurant_id": 1,
+     *     "restaurant_lat_lon": "(-123.1231231,12.123123)",
+     *     "destination_lat_lon": "(-123.1231231,12.123123)",
+     *     "state": 0
+     * }
+     * @param orderRequest
+     */
+    public void handleIncomingOrders(OrderRequest orderRequest) {
+        String modulated = modulateOrderData(orderRequest);
+        LOG.info(modulated);
+
+        RMap<Long, String> ordersQ = Redis.getInstance().getOrderQ();
+        ordersQ.put(orderRequest.getorder_id(), modulated);
+    }
+
+
+    /**
+     * incoming order request object modulator
+     * @param orderRequest - OrderRequest
+     * @return - modulated string
+     */
+    private String modulateOrderData(OrderRequest orderRequest) {
+        //final char ctrlA = '\u0001';
+        final char ctrlA = ':';
+        return String.format("%s%s%s%s%s%s%s%s%s",
+                orderRequest.getorder_id(),
+                ctrlA,
+                orderRequest.getrestaurant_id(),
+                ctrlA,
+                orderRequest.getrestaurant_lat_lon(),
+                ctrlA,
+                orderRequest.getdestination_lat_lon(),
+                ctrlA,
+                orderRequest.getstate()
+        );
+
+    }
+
+
+    /**
+     * {
+     *     "de_id": 12,
+     *     "lat": -56.727263722686104,
+     *     "lon": 37.68402408344105,
+     *     "state": 75
+     * }
+     *
+     * method to handle fleet requests
+     * @param fleetRequest - FleetRequest object as per the dropwizard pojo
+     * @return  - return Cn json string
+     */
+    public String handleFleetRequest(FleetRequest fleetRequest) {
         LOG.info(fleetRequest.toString());
 
         int deId = (int) fleetRequest.getde_id();
@@ -49,21 +108,34 @@ public class FeedRequestHandler {
         // insert if -> not in deListing or Cn is still not set or null
         RMap<Integer, String> processQ = redis.getProcessQ();
 
-        if ( ( !inDeList && state == 0 ) || (macros.Cn == null && state >= 50) )
+        if ((!inDeList && state == 0) || (macros.Cn == null && state >= 50))
             processQ.put(deId, deliveryExecDetails);
 
-        return macros.Cn;
+        return String.format("{\"Cn\": \"%s\"}", macros.Cn);
     }
 
 
+    /**
+     * DeMacros object -
+     * ToDo: Class members are kept default rather than having setters and getters for then due to time constraint on implementation
+     *
+     * Description:
+     *  DeMacros - for incoming request
+     */
     public class DeMacros {
         String Cp, Cd, Cn = null;
 
         public String toString() {
-            return String.format("Cp: %s, Cd: %s, Cn: %s", Cp, Cd,  Cn);
+            return String.format("Cp: %s, Cd: %s, Cn: %s", Cp, Cd, Cn);
         }
     }
 
+
+    /**
+     * get macro items
+     * @param input - complete input string
+     * @return - DeMacros object
+     */
     private DeMacros getDeMacros(String input) {
         String[] splits = input.split(":");
         DeMacros macros = new DeMacros();
@@ -73,4 +145,45 @@ public class FeedRequestHandler {
 
         return macros;
     }
+
+
+    /**
+     * Method used for testing purpose. Testing the redis cached tables
+     * @param type - input type from a range of de | orders | process
+     */
+    public static void queryHandlers(String type) {
+        LOG.info("Printing data for - {}", type);
+        // get redis instance - singleton
+        Redis redis = Redis.getInstance();
+
+        /** upsert delivery exec map */
+        if (type.equalsIgnoreCase("de")) {
+            RMap<Integer, String> deliveryExecsListing = redis.getDeliveryExecs();
+            Set<Integer> deIds = deliveryExecsListing.keySet();
+            for (Integer deId : deIds) {
+                LOG.info("{} -> {}", deId, deliveryExecsListing.get(deId));
+            }
+        }
+
+        /** upsert delivery exec map */
+        if (type.equalsIgnoreCase("process")) {
+            RMap<Integer, String> processQ = redis.getProcessQ();
+            Set<Integer> procIds = processQ.keySet();
+            for (Integer procId: procIds) {
+                LOG.info("{} -> {}", procId, processQ.get(procId));
+            }
+        }
+
+
+        /** upsert delivery exec map */
+        if (type.equalsIgnoreCase("orders") || type.equalsIgnoreCase("order")) {
+            RMap<Long, String> ordersQ = redis.getOrderQ();
+            Set<Long> orderIds = ordersQ.keySet();
+            for (Long orderId: orderIds) {
+                LOG.info("{} -> {}", orderId, ordersQ.get(orderId));
+            }
+        }
+    }
+
+
 }
