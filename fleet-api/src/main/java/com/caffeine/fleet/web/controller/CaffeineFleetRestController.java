@@ -126,8 +126,7 @@ public class CaffeineFleetRestController {
     @Path("/query/{table}")
     public Response healthCheck(@PathParam("table") String type) {
         LOG.info("Query - {}", type);
-        FeedRequestHandler.queryHandlers(type);
-        return Response.ok(Response.Status.OK).build();
+        return Response.ok(FeedRequestHandler.queryHandlers(type)).build();
     }
 
 

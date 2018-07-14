@@ -7,7 +7,6 @@ import org.redisson.api.RMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -151,17 +150,19 @@ public class FeedRequestHandler {
      * Method used for testing purpose. Testing the redis cached tables
      * @param type - input type from a range of de | orders | process
      */
-    public static void queryHandlers(String type) {
+    public static String queryHandlers(String type) {
         LOG.info("Printing data for - {}", type);
         // get redis instance - singleton
         Redis redis = Redis.getInstance();
+
+        StringBuilder sb = new StringBuilder();
 
         /** upsert delivery exec map */
         if (type.equalsIgnoreCase("de")) {
             RMap<Integer, String> deliveryExecsListing = redis.getDeliveryExecs();
             Set<Integer> deIds = deliveryExecsListing.keySet();
             for (Integer deId : deIds) {
-                LOG.info("{} -> {}", deId, deliveryExecsListing.get(deId));
+                sb.append(String.format("%d -> %s\n", deId, deliveryExecsListing.get(deId)));
             }
         }
 
@@ -171,6 +172,7 @@ public class FeedRequestHandler {
             Set<Integer> procIds = processQ.keySet();
             for (Integer procId: procIds) {
                 LOG.info("{} -> {}", procId, processQ.get(procId));
+                sb.append(String.format("%d -> %s\n", procId, processQ.get(procId) ));
             }
         }
 
@@ -181,8 +183,12 @@ public class FeedRequestHandler {
             Set<Long> orderIds = ordersQ.keySet();
             for (Long orderId: orderIds) {
                 LOG.info("{} -> {}", orderId, ordersQ.get(orderId));
+                sb.append(String.format("%d -> %s\n", orderId, ordersQ.get(orderId)));
             }
         }
+
+        LOG.info(sb.toString());
+        return sb.toString();
     }
 
 
