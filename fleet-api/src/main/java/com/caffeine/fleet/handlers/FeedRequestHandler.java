@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 public class FeedRequestHandler {
     private final Logger LOG = LoggerFactory.getLogger(FeedRequestHandler.class);
 
-    public FeedRequestHandler handle(FleetRequest fleetRequest) {
+    public String handle(FleetRequest fleetRequest) {
         LOG.info(fleetRequest.toString());
 
         int deId = (int) fleetRequest.getde_id();
@@ -19,78 +19,48 @@ public class FeedRequestHandler {
         String lon = fleetRequest.getlon();
         int state = fleetRequest.getstate();
 
-        /** ToDo: Remove this hard coding */
-        String positioning = String.format("(%s,%s),null,null", lat, lon);
-        LOG.info("{} -> {}. State: {}", deId, positioning, state);
-
-
+        // get redis instance - singleton
         Redis redis = Redis.getInstance();
 
         /** upsert delivery exec map */
-        RMap<Integer, String> deliveryExecs = redis.getDeliveryExecs();
+        RMap<Integer, String> deliveryExecsListing = redis.getDeliveryExecs();
 
-        /** If found, retrive */
         // deliveryExecDetails- format: Cp, Cd, Cn
         String deliveryExecDetails = String.format("(%s,%s):null:null", lat, lon);
+        LOG.info("{} -> {}. State: {}", deId, deliveryExecDetails, state);
         boolean inDeList = false;
 
-
+        // if found, get details and set the flag
         DeMacros macros;
-        if (deliveryExecs.containsKey(deId)) {
-            deliveryExecDetails = deliveryExecs.get(deId);
-
-            // ToDo: update the Cp
-            macros = getDeMacros(deliveryExecDetails);
-            LOG.info("Macros: " + macros.toString());
-
+        if (deliveryExecsListing.containsKey(deId)) {
+            deliveryExecDetails = deliveryExecsListing.get(deId);
             inDeList = true;
         }
 
+        macros = getDeMacros(deliveryExecDetails);
+        LOG.debug("Macros: " + macros.toString());
 
-//        // insert either as first time entry or modified entry
-//        deliveryExecs.put(deId, deliveryExecDetails);
-//
-//
-//
-//
-//
-//        /** put */
-//        if (!inDeList && state > 50) {
-//            // insert
-//        }
-//        deliveryExecs.put(deId, deliveryExecDetails);
-//        if (macros.Cn == null && state > 50) {
-//
-//        }
+        if (inDeList)
+            deliveryExecDetails = String.format("(%s,%s):%s:null", lat, lon, macros.Cd);
 
+        // If exists, update the Cp - present lat-lon if not it will add the obtained lat-lon
+        deliveryExecsListing.put(deId, deliveryExecDetails);
 
-//
-//
-////        if ()
-////        RMap<Integer, String> processQ = redis.getProcessQ();
-//
-//
-//        deliveryExecs.put(2, positioning);
-//        deliveryExecs.put(3, "1,(l1,l2),(l11, l22)");
-//
-////        processQ.put(1, "1,(l1,l2),null");
-////        processQ.put(2, "1,(l1,l2),null");
-//
-//
-//
-//        System.out.println("DeList:- " + redis.getDeliveryExecs().get(1));
-//        System.out.println("ProcessQ: " + redis.getProcessQ().get(2));
+        // insert if -> not in deListing or Cn is still not set or null
+        RMap<Integer, String> processQ = redis.getProcessQ();
 
-        
+        if ( ( !inDeList && state == 0 ) || (macros.Cn == null && state >= 50) )
+            processQ.put(deId, deliveryExecDetails);
 
-        return this;
+        return macros.Cn;
     }
+
 
     public class DeMacros {
         String Cp, Cd, Cn = null;
 
         public String toString() {
-            return Cp + ":" + Cd + ":" + Cn;
+            return String.format("Cp: %s, Cd: %s, Cn: %s", Cp, Cd,  Cn);
         }
     }
 

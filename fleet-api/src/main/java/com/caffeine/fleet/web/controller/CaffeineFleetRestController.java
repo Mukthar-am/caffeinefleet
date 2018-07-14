@@ -10,7 +10,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
-import javax.ws.rs.*;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URISyntaxException;
@@ -44,7 +47,7 @@ public class CaffeineFleetRestController {
         LOG.info("===== + = + = + = " + this.configs.toString());
         return Response.ok(HealthCheckTemplate.getHealthTemplate()).build();
     }
-    
+
 
     @POST
     public Response requestPicker(FleetRequest fleetRequest) throws URISyntaxException {
@@ -58,13 +61,13 @@ public class CaffeineFleetRestController {
             }
 
             return Response.status(Response.Status.BAD_REQUEST).entity(validationMessages).build();
-        }
-        else {
+        } else {
             FeedRequestHandler feedRequestHandler = new FeedRequestHandler();
-            feedRequestHandler.handle(fleetRequest);
 
-            return Response.ok().build();
-
+            return Response
+                    .ok(
+                            feedRequestHandler.handle(fleetRequest)
+                    ).build();
         }
     }
 
