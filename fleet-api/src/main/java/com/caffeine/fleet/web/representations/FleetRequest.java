@@ -13,8 +13,7 @@ public class FleetRequest {
     @NotBlank
     private String lon;
 
-    @NotBlank
-    private String state;
+    private int state;
 
     public FleetRequest() {
     }
@@ -22,7 +21,7 @@ public class FleetRequest {
     public FleetRequest(long de_id,
                         String lat,
                         String lon,
-                        String state) {
+                        int state) {
         this.de_id = de_id;
         this.lat = lat;
         this.lon = lon;
@@ -52,10 +51,10 @@ public class FleetRequest {
         return this.lon;
     }
 
-    public void setstate(String state) {
+    public void setstate(int state) {
         this.state = state;
     }
-    public String getstate() { return this.state; }
+    public int getstate() { return this.state; }
 
 
     public String toString() {
