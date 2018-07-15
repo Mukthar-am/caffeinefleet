@@ -91,15 +91,18 @@ public class FeedRequestHandler {
         // if found, get details and set the flag
         DeMacros macros;
         if (deliveryExecsListing.containsKey(deId)) {
+            LOG.info("Contains the de # " + deId);
             deliveryExecDetails = deliveryExecsListing.get(deId);
             inDeList = true;
         }
 
         macros = getDeMacros(deliveryExecDetails);
-        LOG.debug("Macros: " + macros.toString());
+        LOG.info("Macros: " + macros.toString());
 
-        if (inDeList)
+        if (inDeList) {
+            LOG.info("It exists and hence update the lat-lon positions");
             deliveryExecDetails = String.format("(%s,%s):%s:null", lat, lon, macros.Cd);
+        }
 
         // If exists, update the Cp - present lat-lon if not it will add the obtained lat-lon
         deliveryExecsListing.put(deId, deliveryExecDetails);
@@ -107,9 +110,13 @@ public class FeedRequestHandler {
         // insert if -> not in deListing or Cn is still not set or null
         RMap<Integer, String> processQ = redis.getProcessQ();
 
-        if ((!inDeList && state == 0) || (macros.Cn == null && state >= 50))
+        LOG.info("{} -> {}. State: {}", deId, deliveryExecDetails, state);
+        if ((!inDeList && state == 0) || (macros.Cn.equalsIgnoreCase("null") && state >= 50)) {
+            LOG.info("Ingesting into processQ");
             processQ.put(deId, deliveryExecDetails);
+        }
 
+        LOG.info("C-next: " + macros.Cn);
         return String.format("{\"Cn\": \"%s\"}", macros.Cn);
     }
 
@@ -168,6 +175,7 @@ public class FeedRequestHandler {
 
         /** upsert delivery exec map */
         if (type.equalsIgnoreCase("process")) {
+            LOG.info("Fetching processQ");
             RMap<Integer, String> processQ = redis.getProcessQ();
             Set<Integer> procIds = processQ.keySet();
             for (Integer procId: procIds) {
